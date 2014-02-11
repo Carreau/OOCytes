@@ -7,6 +7,11 @@ import matplotlib
 import numpy as np
 from matplotlib.pylab import subplots
 from numpy import *
+from scipy.optimize import curve_fit
+
+
+def func(x, b, c):
+    return (1-c)*np.exp(-b*x) + c
 
 
 def make_roi(im, roix, roiy, roiw, roih, color=None, plot=True, ax=None):
@@ -72,3 +77,21 @@ def timecorr3(imge, window):
         # for i =0 we have 1 
         cc[i+1] = imc(imge[:-i-1],imge[i+1:])
     return cc
+
+
+def fit_decay(time, correlation):
+    """
+    Fit the correlation as a function of time with an exponential decay
+    
+    params
+        time: array
+        correlation: array
+        
+    TODO: have the initial parameter setable, or autodetect
+    
+    retrun:
+        (popt, pcov)
+    """
+    popt, pcov = curve_fit(func, time, correlation, p0=(1e-2,0.1))
+    
+    return (popt, pcov)
