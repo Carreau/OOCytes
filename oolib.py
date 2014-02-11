@@ -2,6 +2,7 @@
 Lib for oocyte analysis
 
 """
+from __future__ import division
 
 import matplotlib
 import numpy as np
@@ -11,7 +12,7 @@ from scipy.optimize import curve_fit
 
 
 def func(x, b, c):
-    return (1-c)*np.exp(-b*x) + c
+    return (1-c)*np.exp(-x/b) + c
 
 
 def make_roi(im, roix, roiy, roiw, roih, color=None, plot=True, ax=None):
@@ -77,9 +78,10 @@ def timecorr3(imge, window):
         # for i =0 we have 1 
         cc[i+1] = imc(imge[:-i-1],imge[i+1:])
     return cc
+    
 
 
-def fit_decay(time, correlation):
+def fit_decay(time, correlation, tau0=None):
     """
     Fit the correlation as a function of time with an exponential decay
     
@@ -92,6 +94,16 @@ def fit_decay(time, correlation):
     retrun:
         (popt, pcov)
     """
-    popt, pcov = curve_fit(func, time, correlation, p0=(1e-2,0.1))
+    if tau0 is None:
+        # autoguess
+        low = min(correlation)
+        mid = (max(correlation)+min(correlation)) / 2
+        i = np.argmin(abs(correlation-mid))
+        tau0 = time[i]
+    else :
+        low = 0.1
+            
+
     
+    popt, pcov = curve_fit(func, time, correlation, p0=(tau0,low))
     return (popt, pcov)
